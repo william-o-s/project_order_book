@@ -83,20 +83,6 @@ impl PartialOrd for Order {
     }
 }
 
-impl Order {
-    fn check_orders_cross(&self, other: &Self) -> bool {
-        if self.order_type == other.order_type {
-            // invalid: bid-bid or offer-offer
-            return false
-        }
-
-        match self.order_type {
-            OrderType::BID => self.price >= other.price,
-            OrderType::OFFER => self.price <= other.price
-        }
-    }
-}
-
 struct OrderBook {
     stock_identifier: String,
     bids: BinaryHeap<Order>,
@@ -107,9 +93,14 @@ impl OrderBook {
     fn print_book(&mut self) {
         println!("Stock: {}", self.stock_identifier);
 
-        let bids = self.bids.into_sorted_vec().reverse();
-
         unimplemented!("print order book not implemented!")
+    }
+
+    fn can_fulfill_order(&self) -> bool {
+        let bid = if let Some(b) = self.bids.peek() { b } else { return false };
+        let offer = if let Some(o) = self.offers.peek() { o } else { return false };
+
+        bid.price >= offer.price
     }
 
     fn send_order(&mut self, new_order: Order) {
@@ -119,31 +110,26 @@ impl OrderBook {
             OrderType::OFFER => self.offers.push(new_order)
         }
 
-        // Fulfill any crossing orders
-        loop {
-            // NOTE: borrow as mut first?
-            let bid = if let Some(b) = self.bids.peek() { b } else { break };
-            let offer = if let Some(o) = self.offers.peek() { o } else { break };
+        // Fulfill orders while crossing
+        while self.can_fulfill_order() {
+            let bid = self.bids.peek().unwrap();
+            let offer = self.offers.peek().unwrap();
 
-            if bid.check_orders_cross(&offer) {
-                match bid.price.cmp(&offer.price) {
-                    Ordering::Greater => {
-                        let mut bid = self.bids.peek_mut().unwrap();
-                        bid.quantity -= offer.quantity;
-                        self.offers.pop();
-                    },
-                    Ordering::Equal => {
-                        self.bids.pop();
-                        self.offers.pop();
-                    },
-                    Ordering::Less => {
-                        let mut offer = self.offers.peek_mut().unwrap();
-                        offer.quantity -= bid.quantity;
-                        self.bids.pop();
-                    }
+            match bid.quantity.cmp(&offer.quantity) {
+                Ordering::Greater => {
+                    let mut bid = self.bids.peek_mut().unwrap();
+                    bid.quantity -= offer.quantity;
+                    self.offers.pop();
+                },
+                Ordering::Equal => {
+                    self.bids.pop();
+                    self.offers.pop();
+                },
+                Ordering::Less => {
+                    let mut offer = self.offers.peek_mut().unwrap();
+                    offer.quantity -= bid.quantity;
+                    self.bids.pop();
                 }
-            } else {
-                break
             }
         }
     }
