@@ -90,8 +90,19 @@ struct OrderBook {
 }
 
 impl OrderBook {
-    fn print_book(&mut self) {
+    fn print_book(self) {
         println!("Stock: {}", self.stock_identifier);
+
+        let mut bids = self.bids.into_sorted_vec();
+        bids.reverse();
+        let mut offers = self.offers.into_sorted_vec();
+        offers.reverse();
+
+
+        println!("[Bids]");
+        for order in bids {
+            println!("{} {} @ ${}", order.participant, order.quantity, order.price);
+        }
 
         unimplemented!("print order book not implemented!")
     }
@@ -139,8 +150,6 @@ fn main() {
     // init
     let bids: BinaryHeap<Order> = BinaryHeap::new();
     let offers: BinaryHeap<Order> = BinaryHeap::new();
-
-    OrderBook { stock_identifier, bids, offers }
 
     // update order book
     loop {
