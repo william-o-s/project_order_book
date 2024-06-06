@@ -7,18 +7,22 @@ use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
 
+// Primitives
 type Id = u32;
 type Username = String;
 type Price = f64;
 type Volume = u128;
-type OrderBook = BTreeMap<Price, VecDeque<Order>>;
+
+// Composites
+type OrderQueue = VecDeque<Order>;
+type OrderBook = BTreeMap<Price, OrderQueue>;
 
 enum Side {
     BID,
     OFFER,
 }
 
-struct Order {
+pub struct Order {
     id: Id,
     username: Username,
     price: Price,
@@ -26,11 +30,35 @@ struct Order {
     side: Side
 }
 
-struct Trade {
+pub struct Trade {
     buyer: Username,
     seller: Username,
     price: Price,
     volume: Volume
+}
+
+pub struct MatchingEngine {
+    bids: OrderBook,
+    offers: OrderBook,
+    price_volumes: 
+}
+
+impl MatchingEngine {
+    pub fn submit_order(&mut self, order: Order) -> Vec<Trade> {
+        unimplemented!()
+    }
+
+    pub fn get_price_levels(side: Side) -> Vec<Price> {
+        unimplemented!()
+    }
+
+    pub fn get_volume_at_price(side: Side, price: Price) -> Volume {
+        unimplemented!()
+    }
+
+    pub fn cancel_order() {
+        unimplemented!()
+    }
 }
 
 fn can_fulfill_order(bids: OrderBook, offers: OrderBook) -> bool {
@@ -69,10 +97,6 @@ fn send_order(bids: &mut OrderBook, offers: &mut OrderBook, new_order: Order) {
             }
         }
     }
-}
-
-fn submit_order() -> Vec<Trade> {
-    unimplemented!()
 }
 
 fn main() {
